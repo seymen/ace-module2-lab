@@ -51,6 +51,10 @@ export function getUserProfile () {
 
     let username = user.username
 
+    if (username) {
+      username = username.replace(/[\r\n\u2028\u2029]/g, '')
+    }
+
     if (username?.match(/#{(.*)}/) !== null && utils.isChallengeEnabled(challenges.usernameXssChallenge)) {
       req.app.locals.abused_ssti_bug = true
       const code = username?.substring(2, username.length - 1)
@@ -75,10 +79,10 @@ export function getUserProfile () {
         }
         username = eval(code) // eslint-disable-line no-eval
       } catch (err) {
-        username = '\\' + username
+        username = '\\' + username.replace(/([#!]{)/g, '\\$1')
       }
     } else {
-      username = '\\' + username
+      username = '\\' + (username ? username.replace(/([#!]{)/g, '\\$1') : username)
     }
 
     const themeKey = config.get<string>('application.theme') as keyof typeof themes
